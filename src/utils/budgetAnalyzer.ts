@@ -1,4 +1,5 @@
-import { spendingCategories, transactions } from '../data/mockData';
+import { calculateCategoryTotals } from '../services/api';
+import type { Transaction } from '../services/api';
 
 export interface InsightCard {
   id: string;
@@ -8,29 +9,23 @@ export interface InsightCard {
   color: string;
 }
 
-interface Transaction {
-  id: number;
-  name: string;
-  amount: number;
-  status: string;
-  date: string;
-}
-
 export function analyzeBudget(transactionsData: Transaction[]): InsightCard[] {
   const insights: InsightCard[] = [];
 
   // 1. Alerte Dépense - Catégorie la plus élevée
-  if (spendingCategories.length > 0) {
-    const sortedCategories = [...spendingCategories].sort((a, b) => b.amount - a.amount);
-    const topCategory = sortedCategories[0];
-    const totalSpending = spendingCategories.reduce((sum, cat) => sum + cat.amount, 0);
-    const percentage = ((topCategory.amount / totalSpending) * 100).toFixed(0);
+  const categoryTotals = calculateCategoryTotals(transactionsData);
+  const totalSpending = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
+
+  if (Object.keys(categoryTotals).length > 0) {
+    const sortedCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+    const [topCategory, topAmount] = sortedCategories[0];
+    const percentage = ((topAmount / totalSpending) * 100).toFixed(0);
 
     insights.push({
       id: 'alert-1',
       type: 'alert',
       icon: 'AlertTriangle',
-      message: `⚠️ Attention, ce mois-ci le poste ${topCategory.name} représente ${percentage}% de votre budget total.`,
+      message: `⚠️ Attention, ce mois-ci le poste ${topCategory} représente ${percentage}% de votre budget total.`,
       color: '#f59e0b'
     });
   }
@@ -51,7 +46,7 @@ export function analyzeBudget(transactionsData: Transaction[]): InsightCard[] {
       id: 'trend-1',
       type: 'trend',
       icon: 'TrendingUp',
-      message: `📈 Vos dépenses semblent augmenter. Vérifiez les achats récents type '${largest.name}' (${Math.abs(largest.amount)}€).`,
+      message: `📈 Vos dépenses semblent augmenter. Vérifiez les achats récents type '${largest.name}' (${Math.abs(largest.amount).toFixed(2)}€).`,
       color: '#3b82f6'
     });
   }

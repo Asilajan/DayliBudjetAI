@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Sparkles, AlertTriangle, TrendingUp, Coffee, Lightbulb } from 'lucide-react';
-import { transactions } from '../data/mockData';
 import { analyzeBudget } from '../utils/budgetAnalyzer';
+import type { Transaction } from '../services/api';
 
 const iconMap = {
   AlertTriangle,
@@ -10,7 +10,11 @@ const iconMap = {
   Lightbulb
 };
 
-export function InsightsWidget() {
+interface InsightsWidgetProps {
+  transactions: Transaction[];
+}
+
+export function InsightsWidget({ transactions }: InsightsWidgetProps) {
   const insights = analyzeBudget(transactions);
 
   return (
