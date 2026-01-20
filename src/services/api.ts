@@ -5,7 +5,7 @@
 const API_URL = "http://casaoslenovo.duckdns.org:8085/api/v2/tables/mdzbaovwu0orw88/records?offset=0&limit=100&viewId=vwxltw3juurlv7mx";
 
 // ⚠️ REMPLACE CECI PAR TON VRAI TOKEN (xc8-...)
-const API_TOKEN = "COLLE_TON_TOKEN_ICI"; 
+const API_TOKEN = "KOYudfXyj3Ry6TQGtiJ1gfqKC9gUPDIWGrmqWvCm"; 
 
 // 2. INTERFACES
 
