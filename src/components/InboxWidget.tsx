@@ -38,15 +38,15 @@ export function InboxWidget() {
     }
   }
 
-  async function handleDeleteEmail(id: string) {
-    const success = await deleteEmailAccount(id);
+  async function handleDeleteEmail(id: string | number) {
+    const success = await deleteEmailAccount(String(id));
     if (success) {
       await loadEmails();
     }
   }
 
-  async function handleToggleEmail(id: string, currentStatus: boolean) {
-    const success = await toggleEmailAccount(id, !currentStatus);
+  async function handleToggleEmail(id: string | number, currentStatus: boolean) {
+    const success = await toggleEmailAccount(String(id), !currentStatus);
     if (success) {
       await loadEmails();
     }
@@ -120,44 +120,47 @@ export function InboxWidget() {
             Aucune adresse email configurée
           </div>
         ) : (
-          emails.map((email, index) => (
-            <motion.div
-              key={email.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="flex items-center justify-between p-3 bg-[#0a0a0a] rounded-lg hover:bg-[#0f0f0f] transition-colors"
-            >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className={`p-2 rounded-lg ${email.is_active ? 'bg-[#3b82f6]/20' : 'bg-[#1a1a1a]'}`}>
-                  <Mail className={`w-4 h-4 ${email.is_active ? 'text-[#3b82f6]' : 'text-[#6f6f6f]'}`} />
+          emails.map((email, index) => {
+            const emailId = email.Id || email.id;
+            return (
+              <motion.div
+                key={emailId}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="flex items-center justify-between p-3 bg-[#0a0a0a] rounded-lg hover:bg-[#0f0f0f] transition-colors"
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className={`p-2 rounded-lg ${email.is_active ? 'bg-[#3b82f6]/20' : 'bg-[#1a1a1a]'}`}>
+                    <Mail className={`w-4 h-4 ${email.is_active ? 'text-[#3b82f6]' : 'text-[#6f6f6f]'}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-white truncate">{email.name}</div>
+                    <div className="text-xs text-[#6f6f6f] truncate">{email.email}</div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-white truncate">{email.name}</div>
-                  <div className="text-xs text-[#6f6f6f] truncate">{email.email}</div>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleToggleEmail(email.id, email.is_active)}
-                  className={`px-2 py-1 text-xs rounded-full transition-colors ${
-                    email.is_active
-                      ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
-                      : 'bg-[#1a1a1a] text-[#6f6f6f] hover:bg-[#2a2a2a]'
-                  }`}
-                >
-                  {email.is_active ? 'Actif' : 'Inactif'}
-                </button>
-                <button
-                  onClick={() => handleDeleteEmail(email.id)}
-                  className="p-1 hover:bg-[#1a1a1a] rounded transition-colors"
-                >
-                  <Trash2 className="w-3 h-3 text-red-500" />
-                </button>
-              </div>
-            </motion.div>
-          ))
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleToggleEmail(emailId!, email.is_active)}
+                    className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                      email.is_active
+                        ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
+                        : 'bg-[#1a1a1a] text-[#6f6f6f] hover:bg-[#2a2a2a]'
+                    }`}
+                  >
+                    {email.is_active ? 'Actif' : 'Inactif'}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteEmail(emailId!)}
+                    className="p-1 hover:bg-[#1a1a1a] rounded transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3 text-red-500" />
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })
         )}
       </div>
     </motion.div>
