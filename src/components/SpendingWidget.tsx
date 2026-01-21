@@ -36,7 +36,7 @@ export function SpendingWidget({ transactions }: SpendingWidgetProps) {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <TrendingDown className="w-5 h-5 text-white" />
-          <h2 className="text-white font-medium">Spending</h2>
+          <h2 className="text-white font-medium">Dépenses</h2>
         </div>
         <span className="text-sm text-white font-medium">
           {totalSpending.toLocaleString('fr-FR', {
@@ -49,7 +49,7 @@ export function SpendingWidget({ transactions }: SpendingWidgetProps) {
       <div className="space-y-5">
         {categoriesWithBudgets.length === 0 ? (
           <div className="text-center py-8 text-[#6f6f6f]">
-            No spending data available
+            Aucune donnée de dépenses disponible
           </div>
         ) : (
           categoriesWithBudgets.map((category, index) => {
@@ -85,7 +85,7 @@ export function SpendingWidget({ transactions }: SpendingWidgetProps) {
                     })} €
                   </span>
                   <span className="text-xs text-[#6f6f6f]">
-                    of {category.budget.toLocaleString('fr-FR', {
+                    sur {category.budget.toLocaleString('fr-FR', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2
                     })} €

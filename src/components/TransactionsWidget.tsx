@@ -21,13 +21,13 @@ export function TransactionsWidget({ transactions }: TransactionsWidgetProps) {
           <ShoppingCart className="w-5 h-5 text-white" />
           <h2 className="text-white font-medium">Transactions</h2>
         </div>
-        <span className="text-xs text-[#6f6f6f]">{transactions.length} total</span>
+        <span className="text-xs text-[#6f6f6f]">{transactions.length} au total</span>
       </div>
 
       <div className="space-y-1 max-h-96 overflow-y-auto">
         {recentTransactions.length === 0 ? (
           <div className="text-center py-8 text-[#6f6f6f]">
-            No transactions found
+            Aucune transaction trouvée
           </div>
         ) : (
           recentTransactions.map((transaction, index) => (

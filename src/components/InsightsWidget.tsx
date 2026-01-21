@@ -26,7 +26,7 @@ export function InsightsWidget({ transactions }: InsightsWidgetProps) {
     >
       <div className="flex items-center gap-2 mb-6">
         <Sparkles className="w-5 h-5 text-white" />
-        <h2 className="text-white font-medium">Insights</h2>
+        <h2 className="text-white font-medium">Analyses</h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
@@ -61,7 +61,7 @@ export function InsightsWidget({ transactions }: InsightsWidgetProps) {
       <div className="relative">
         <input
           type="text"
-          placeholder="Ask Midday AI a question..."
+          placeholder="Posez une question à l'IA..."
           className="w-full bg-[#0a0a0a] border border-[#2f2f2f] rounded-lg px-4 py-3 text-white placeholder-[#6f6f6f] focus:outline-none focus:border-[#4f4f4f] transition-colors"
         />
         <Sparkles className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6f6f6f]" />

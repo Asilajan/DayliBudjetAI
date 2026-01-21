@@ -19,7 +19,7 @@ export function InboxWidget() {
     >
       <div className="flex items-center gap-2 mb-6">
         <Inbox className="w-5 h-5 text-white" />
-        <h2 className="text-white font-medium">Inbox</h2>
+        <h2 className="text-white font-medium">Boîte de réception</h2>
       </div>
 
       <div className="space-y-3">
@@ -52,7 +52,7 @@ export function InboxWidget() {
                     : 'bg-green-500/10 text-green-500'
                 }`}
               >
-                {item.status === 'pending' ? 'Pending' : 'Done'}
+                {item.status === 'pending' ? 'En attente' : 'Terminé'}
               </span>
             </motion.div>
           );

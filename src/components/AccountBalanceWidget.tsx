@@ -14,7 +14,7 @@ export function AccountBalanceWidget() {
     >
       <div className="flex items-center gap-2 mb-6">
         <Wallet className="w-5 h-5 text-white" />
-        <h2 className="text-white font-medium">Account Balance</h2>
+        <h2 className="text-white font-medium">Solde des comptes</h2>
       </div>
 
       <div className="relative h-64 flex items-center justify-center">
