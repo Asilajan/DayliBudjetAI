@@ -1,6 +1,6 @@
 // Configuration API NocoDB
-const API_URL = "http://casaoslenovo.duckdns.org:8085/api/v2/tables/mdzbaovwu0orw88/records?limit=100&sort=-Id";
-const API_TOKEN = "KOYudfXyj3Ry6TQGtiJ1gfqKC9gUPDIWGrmqWvCm";
+const API_URL = import.meta.env.VITE_NOCODB_API_URL;
+const API_TOKEN = import.meta.env.VITE_NOCODB_API_TOKEN;
 
 // Interface pour les données reçues de NocoDB
 export interface NocoDBTransaction {
@@ -40,7 +40,8 @@ export async function fetchTransactions(): Promise<Transaction[]> {
   console.log("🚀 Fetching data from NocoDB...");
 
   try {
-    const response = await fetch(API_URL, {
+    const url = `${API_URL}?limit=100&sort=-Id`;
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'xc-token': API_TOKEN,
