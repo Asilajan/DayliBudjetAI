@@ -1,3 +1,5 @@
+import { fetchViaProxy } from './api';
+
 const API_TOKEN = import.meta.env.VITE_NOCODB_API_TOKEN;
 const BUDGET_API_URL = import.meta.env.VITE_NOCODB_BUDGET_URL;
 const EXPENSES_API_URL = import.meta.env.VITE_NOCODB_EXPENSES_URL;
@@ -39,16 +41,14 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
+interface NocoDBListResponse<T> {
+  list: T[];
+}
+
 export async function getBudgetConfig(): Promise<BudgetConfig | null> {
   try {
-    const response = await fetch(`${BUDGET_API_URL}?limit=1&sort=-Id`, {
-      method: 'GET',
-      headers
-    });
-
-    if (!response.ok) return null;
-
-    const json = await response.json();
+    const url = `${BUDGET_API_URL}?limit=1&sort=-Id`;
+    const json = await fetchViaProxy(url) as NocoDBListResponse<BudgetConfig>;
     const records = json.list || [];
 
     if (records.length === 0) return null;
@@ -94,14 +94,8 @@ export async function updateBudget(budget: number): Promise<boolean> {
 
 export async function getExpenses(): Promise<Expense[]> {
   try {
-    const response = await fetch(`${EXPENSES_API_URL}?limit=1000&sort=-Id`, {
-      method: 'GET',
-      headers
-    });
-
-    if (!response.ok) return [];
-
-    const json = await response.json();
+    const url = `${EXPENSES_API_URL}?limit=1000&sort=-Id`;
+    const json = await fetchViaProxy(url) as NocoDBListResponse<Expense>;
     return json.list || [];
   } catch (error) {
     console.error('Error fetching expenses:', error);
@@ -144,14 +138,8 @@ export async function deleteExpense(id: string): Promise<boolean> {
 
 export async function getEmailAccounts(): Promise<EmailAccount[]> {
   try {
-    const response = await fetch(`${EMAILS_API_URL}?limit=1000&sort=-Id`, {
-      method: 'GET',
-      headers
-    });
-
-    if (!response.ok) return [];
-
-    const json = await response.json();
+    const url = `${EMAILS_API_URL}?limit=1000&sort=-Id`;
+    const json = await fetchViaProxy(url) as NocoDBListResponse<EmailAccount>;
     return json.list || [];
   } catch (error) {
     console.error('Error fetching emails:', error);

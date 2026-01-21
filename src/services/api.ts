@@ -1,3 +1,5 @@
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const API_URL = import.meta.env.VITE_NOCODB_API_URL;
 const API_TOKEN = import.meta.env.VITE_NOCODB_API_TOKEN;
 
@@ -31,6 +33,29 @@ export interface Transaction {
   tags?: string[];
 }
 
+async function fetchViaProxy(nocodbUrl: string): Promise<unknown> {
+  const proxyUrl = `${SUPABASE_URL}/functions/v1/nocodb-proxy`;
+
+  const response = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({
+      url: nocodbUrl,
+      token: API_TOKEN
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Proxy error: ${error}`);
+  }
+
+  return response.json();
+}
+
 function parsePrice(prix: string | number): number {
   if (typeof prix === 'number') return prix;
   if (!prix) return 0;
@@ -43,24 +68,11 @@ function parsePrice(prix: string | number): number {
 }
 
 export async function fetchTransactions(): Promise<Transaction[]> {
-  console.log("Fetching data from NocoDB...");
+  console.log("Fetching data from NocoDB via proxy...");
 
   try {
     const url = `${API_URL}?limit=200&sort=-Id`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'xc-token': API_TOKEN,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
-      return [];
-    }
-
-    const json: NocoDBResponse = await response.json();
+    const json = await fetchViaProxy(url) as NocoDBResponse;
     const records = json.list || [];
 
     console.log(`${records.length} transactions loaded from NocoDB`);
@@ -97,3 +109,5 @@ export function calculateCategoryTotals(transactions: Transaction[]): Record<str
 export function getTotalSpending(transactions: Transaction[]): number {
   return transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
 }
+
+export { fetchViaProxy };
