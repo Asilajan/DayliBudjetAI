@@ -100,7 +100,7 @@ export function SyncStatus({ onSync }: SyncStatusProps) {
         ) : (
           <WifiOff className="w-3.5 h-3.5 text-red-400" />
         )}
-        <span className="text-xs text-[#8b8b8b]">NocoDB</span>
+        <span className="text-xs text-[#8b8b8b]">Supabase</span>
       </div>
 
       <button

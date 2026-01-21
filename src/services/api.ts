@@ -1,27 +1,5 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const API_URL = import.meta.env.VITE_NOCODB_API_URL;
-const API_TOKEN = import.meta.env.VITE_NOCODB_API_TOKEN;
-
-export interface NocoDBTransaction {
-  Id?: number;
-  nc_id?: number;
-  Produit: string;
-  Prix: string | number;
-  Categorie: string;
-  Date: string;
-}
-
-export interface NocoDBResponse {
-  list: NocoDBTransaction[];
-  pageInfo?: {
-    totalRows: number;
-    page: number;
-    pageSize: number;
-    isFirstPage: boolean;
-    isLastPage: boolean;
-  };
-}
 
 export interface Transaction {
   id: number;
@@ -33,58 +11,61 @@ export interface Transaction {
   tags?: string[];
 }
 
-async function fetchViaProxy(nocodbUrl: string): Promise<unknown> {
-  const proxyUrl = `${SUPABASE_URL}/functions/v1/nocodb-proxy`;
-
-  const response = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-    body: JSON.stringify({
-      url: nocodbUrl,
-      token: API_TOKEN
-    })
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Proxy error: ${error}`);
-  }
-
-  return response.json();
+interface SupabaseTransaction {
+  id: number;
+  produit: string;
+  prix_u: number;
+  quantite: number;
+  total: number;
+  categorie?: string;
+  nature?: string;
+  correspondant?: string;
+  date_ticket: string;
+  tags_str?: string;
+  source_id?: string;
+  created_at: string;
 }
 
-function parsePrice(prix: string | number): number {
-  if (typeof prix === 'number') return prix;
-  if (!prix) return 0;
-  const cleaned = String(prix)
-    .replace('€', '')
-    .replace(/\s/g, '')
-    .replace(',', '.')
-    .trim();
-  return parseFloat(cleaned) || 0;
+interface SupabaseResponse {
+  transactions: SupabaseTransaction[];
+  total: number;
+  limit: number;
+  offset: number;
 }
 
 export async function fetchTransactions(): Promise<Transaction[]> {
-  console.log("Fetching data from NocoDB via proxy...");
+  console.log("Fetching data from Supabase...");
 
   try {
-    const url = `${API_URL}?limit=200&sort=-Id`;
-    const json = await fetchViaProxy(url) as NocoDBResponse;
-    const records = json.list || [];
+    const response = await fetch(
+      `${SUPABASE_URL}/functions/v1/ingest-transactions?limit=200`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+      }
+    );
 
-    console.log(`${records.length} transactions loaded from NocoDB`);
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Supabase error: ${error}`);
+    }
 
-    return records.map((record, index) => ({
-      id: record.Id || record.nc_id || index + 1,
-      name: record.Produit || "Sans nom",
-      amount: -Math.abs(parsePrice(record.Prix)),
+    const json: SupabaseResponse = await response.json();
+    const records = json.transactions || [];
+
+    console.log(`${records.length} transactions loaded from Supabase`);
+
+    return records.map((record) => ({
+      id: record.id,
+      name: record.produit || "Sans nom",
+      amount: -Math.abs(record.total || record.prix_u || 0),
       status: 'completed',
-      date: record.Date ? new Date(record.Date).toISOString() : new Date().toISOString(),
-      category: record.Categorie || "Non classe",
-      tags: []
+      date: record.date_ticket ? new Date(record.date_ticket).toISOString() : new Date().toISOString(),
+      category: record.nature || record.categorie || "Non classe",
+      tags: record.tags_str ? record.tags_str.split(',').map(t => t.trim()) : []
     }));
 
   } catch (error) {
@@ -109,5 +90,3 @@ export function calculateCategoryTotals(transactions: Transaction[]): Record<str
 export function getTotalSpending(transactions: Transaction[]): number {
   return transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
 }
-
-export { fetchViaProxy };
