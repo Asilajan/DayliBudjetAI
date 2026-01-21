@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Wallet, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { getBudgetConfig, updateBudget, getExpenses, addExpense, deleteExpense, type Expense } from '../services/supabase';
+import { getBudgetConfig, updateBudget, getExpenses, addExpense, deleteExpense, type Expense } from '../services/localStorage';
 
 type TabType = 'courses' | 'factures';
 
