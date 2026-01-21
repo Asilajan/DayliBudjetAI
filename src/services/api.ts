@@ -1,20 +1,13 @@
-// src/api.ts
+// Configuration API NocoDB
+const API_URL = "http://casaoslenovo.duckdns.org:8085/api/v2/tables/mdzbaovwu0orw88/records?limit=100&sort=-Id";
+const API_TOKEN = "KOYudfXyj3Ry6TQGtiJ1gfqKC9gUPDIWGrmqWvCm";
 
-// 1. CONFIGURATION
-// On utilise l'adresse directe avec le ViewID pour être sûr d'avoir les bonnes données
-const API_URL = "http://casaoslenovo.duckdns.org:8085/api/v2/tables/mdzbaovwu0orw88/records?offset=0&limit=100&viewId=vwxltw3juurlv7mx";
-
-// ⚠️ REMPLACE CECI PAR TON VRAI TOKEN (xc8-...)
-const API_TOKEN = "KOYudfXyj3Ry6TQGtiJ1gfqKC9gUPDIWGrmqWvCm"; 
-
-// 2. INTERFACES
-
-// Ce que NocoDB nous envoie (Brut)
+// Interface pour les données reçues de NocoDB
 export interface NocoDBTransaction {
   Id: number;
   Produit: string;
-  Prix_U: number;     // Attention : C'est Prix_U maintenant, pas Prix
-  Date: string;       // YYYY-MM-DD
+  Prix: number;
+  Date: string;
   Categorie: string;
   Total: number;
   Tags: string;
@@ -22,7 +15,7 @@ export interface NocoDBTransaction {
 
 export interface NocoDBResponse {
   list: NocoDBTransaction[];
-  pageInfo: {
+  pageInfo?: {
     totalRows: number;
     page: number;
     pageSize: number;
@@ -31,7 +24,7 @@ export interface NocoDBResponse {
   };
 }
 
-// Ce que ton application utilise (Interne)
+// Interface pour l'application
 export interface Transaction {
   id: number;
   name: string;
@@ -42,11 +35,11 @@ export interface Transaction {
   tags?: string[];
 }
 
-// 3. FONCTION DE RÉCUPÉRATION (Le Pont)
+// Récupération des transactions depuis NocoDB
 export async function fetchTransactions(): Promise<Transaction[]> {
+  console.log("🚀 Fetching data from NocoDB...");
+
   try {
-    console.log("Fetching NocoDB data...");
-    
     const response = await fetch(API_URL, {
       method: 'GET',
       headers: {
@@ -56,32 +49,32 @@ export async function fetchTransactions(): Promise<Transaction[]> {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.error(`HTTP error! status: ${response.status}`);
+      return [];
     }
 
-    const data: NocoDBResponse = await response.json();
-    console.log("Data received:", data);
+    const json: NocoDBResponse = await response.json();
+    const records = json.list || [];
 
-    // C'est ici qu'on traduit le langage NocoDB en langage Application
-    return data.list.map((item) => ({
-      id: item.Id,
-      name: item.Produit || "Produit Inconnu", // Sécurité si vide
-      // On utilise Prix_U (ton prix unitaire) ou Total si tu préfères
-      amount: -Math.abs(item.Prix_U || 0), 
+    console.log(`✅ ${records.length} transactions loaded`);
+
+    return records.map((record) => ({
+      id: record.Id || Math.floor(Math.random() * 1000000),
+      name: record.Produit || "Sans nom",
+      amount: -Math.abs(Number(record.Prix) || 0),
       status: 'completed',
-      date: item.Date, // Format YYYY-MM-DD
-      category: item.Categorie || "Non classé",
-      tags: item.Tags ? String(item.Tags).split(',').map(tag => tag.trim()) : []
+      date: record.Date ? new Date(record.Date).toISOString() : new Date().toISOString(),
+      category: record.Categorie || "Non classé",
+      tags: record.Tags ? String(record.Tags).split(',').map(tag => tag.trim()) : []
     }));
 
   } catch (error) {
-    console.error('Error fetching transactions from NocoDB:', error);
+    console.error("❌ Error fetching transactions:", error);
     return [];
   }
 }
 
-// 4. FONCTIONS DE CALCUL (Indispensables pour tes graphiques)
-
+// Calcul des totaux par catégorie
 export function calculateCategoryTotals(transactions: Transaction[]): Record<string, number> {
   const totals: Record<string, number> = {};
 
@@ -95,6 +88,7 @@ export function calculateCategoryTotals(transactions: Transaction[]): Record<str
   return totals;
 }
 
+// Calcul du total des dépenses
 export function getTotalSpending(transactions: Transaction[]): number {
   return transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
 }
