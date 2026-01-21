@@ -2,13 +2,12 @@ const API_URL = import.meta.env.VITE_NOCODB_API_URL;
 const API_TOKEN = import.meta.env.VITE_NOCODB_API_TOKEN;
 
 export interface NocoDBTransaction {
-  Id: number;
+  Id?: number;
+  nc_id?: number;
   Produit: string;
-  Prix: number;
-  Date: string;
+  Prix: string | number;
   Categorie: string;
-  Total: number;
-  Tags: string;
+  Date: string;
 }
 
 export interface NocoDBResponse {
@@ -32,11 +31,22 @@ export interface Transaction {
   tags?: string[];
 }
 
+function parsePrice(prix: string | number): number {
+  if (typeof prix === 'number') return prix;
+  if (!prix) return 0;
+  const cleaned = String(prix)
+    .replace('€', '')
+    .replace(/\s/g, '')
+    .replace(',', '.')
+    .trim();
+  return parseFloat(cleaned) || 0;
+}
+
 export async function fetchTransactions(): Promise<Transaction[]> {
   console.log("Fetching data from NocoDB...");
 
   try {
-    const url = `${API_URL}?limit=100&sort=-Id`;
+    const url = `${API_URL}?limit=200&sort=-Id`;
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -55,14 +65,14 @@ export async function fetchTransactions(): Promise<Transaction[]> {
 
     console.log(`${records.length} transactions loaded from NocoDB`);
 
-    return records.map((record) => ({
-      id: record.Id || Math.floor(Math.random() * 1000000),
+    return records.map((record, index) => ({
+      id: record.Id || record.nc_id || index + 1,
       name: record.Produit || "Sans nom",
-      amount: -Math.abs(Number(record.Prix) || 0),
+      amount: -Math.abs(parsePrice(record.Prix)),
       status: 'completed',
       date: record.Date ? new Date(record.Date).toISOString() : new Date().toISOString(),
       category: record.Categorie || "Non classe",
-      tags: record.Tags ? String(record.Tags).split(',').map(tag => tag.trim()) : []
+      tags: []
     }));
 
   } catch (error) {
