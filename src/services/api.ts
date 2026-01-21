@@ -1,5 +1,6 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL;
 
 export interface Transaction {
   id: number;
@@ -89,4 +90,31 @@ export function calculateCategoryTotals(transactions: Transaction[]): Record<str
 
 export function getTotalSpending(transactions: Transaction[]): number {
   return transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+}
+
+export async function syncFromN8N(): Promise<void> {
+  console.log("Triggering n8n sync...");
+
+  if (!N8N_WEBHOOK_URL) {
+    console.warn("N8N webhook URL not configured");
+    return;
+  }
+
+  try {
+    const response = await fetch(N8N_WEBHOOK_URL, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`n8n sync failed: ${response.statusText}`);
+    }
+
+    console.log("n8n sync completed successfully");
+  } catch (error) {
+    console.error("Error syncing from n8n:", error);
+    throw error;
+  }
 }

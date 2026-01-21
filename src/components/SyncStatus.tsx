@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, CheckCircle, AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import { syncFromN8N } from '../services/api';
 
 interface SyncStatusProps {
   onSync: () => void;
@@ -41,6 +42,8 @@ export function SyncStatus({ onSync }: SyncStatusProps) {
   const handleManualSync = async () => {
     setStatus('syncing');
     try {
+      await syncFromN8N();
+      await new Promise(resolve => setTimeout(resolve, 1000));
       await onSync();
       setStatus('success');
       setLastSync(new Date());
