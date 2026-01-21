@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import { RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { supabase } from '../services/api';
+import { useState, useEffect, useRef } from 'react';
+import { RefreshCw, CheckCircle, AlertCircle, Wifi, WifiOff } from 'lucide-react';
 
 interface SyncStatusProps {
   onSync: () => void;
@@ -9,51 +8,49 @@ interface SyncStatusProps {
 export function SyncStatus({ onSync }: SyncStatusProps) {
   const [status, setStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [lastSync, setLastSync] = useState<Date | null>(null);
-  const [newCount, setNewCount] = useState(0);
+  const [isConnected, setIsConnected] = useState(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const channel = supabase
-      .channel('transactions-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'transactions'
-        },
-        (payload) => {
-          console.log('Nouvelle transaction reçue:', payload);
-          setNewCount(prev => prev + 1);
-          setStatus('success');
-          setLastSync(new Date());
-
-          setTimeout(() => {
-            setStatus('idle');
-          }, 3000);
-        }
-      )
-      .subscribe();
+    intervalRef.current = setInterval(() => {
+      handleAutoSync();
+    }, 30000);
 
     return () => {
-      supabase.removeChannel(channel);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
   }, []);
 
-  useEffect(() => {
-    if (newCount > 0) {
-      onSync();
-      setNewCount(0);
-    }
-  }, [newCount, onSync]);
-
-  const handleManualSync = () => {
-    setStatus('syncing');
-    onSync();
-    setTimeout(() => {
+  const handleAutoSync = async () => {
+    try {
+      setStatus('syncing');
+      await onSync();
       setStatus('success');
       setLastSync(new Date());
+      setIsConnected(true);
       setTimeout(() => setStatus('idle'), 2000);
-    }, 1000);
+    } catch {
+      setStatus('error');
+      setIsConnected(false);
+      setTimeout(() => setStatus('idle'), 3000);
+    }
+  };
+
+  const handleManualSync = async () => {
+    setStatus('syncing');
+    try {
+      await onSync();
+      setStatus('success');
+      setLastSync(new Date());
+      setIsConnected(true);
+      setTimeout(() => setStatus('idle'), 2000);
+    } catch {
+      setStatus('error');
+      setIsConnected(false);
+      setTimeout(() => setStatus('idle'), 3000);
+    }
   };
 
   const getStatusColor = () => {
@@ -85,18 +82,27 @@ export function SyncStatus({ onSync }: SyncStatusProps) {
       case 'syncing':
         return 'Synchronisation...';
       case 'success':
-        return 'Synchronisé';
+        return 'Synchronise';
       case 'error':
         return 'Erreur';
       default:
         return lastSync
-          ? `Dernière sync: ${lastSync.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
-          : 'Prêt';
+          ? `Sync: ${lastSync.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+          : 'Pret';
     }
   };
 
   return (
     <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg">
+        {isConnected ? (
+          <Wifi className="w-3.5 h-3.5 text-green-400" />
+        ) : (
+          <WifiOff className="w-3.5 h-3.5 text-red-400" />
+        )}
+        <span className="text-xs text-[#8b8b8b]">NocoDB</span>
+      </div>
+
       <button
         onClick={handleManualSync}
         disabled={status === 'syncing'}
@@ -107,14 +113,6 @@ export function SyncStatus({ onSync }: SyncStatusProps) {
         </span>
         <span className="text-sm text-[#e5e5e5]">{getStatusText()}</span>
       </button>
-
-      {newCount > 0 && (
-        <div className="px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
-          <span className="text-xs font-medium text-green-400">
-            {newCount} {newCount === 1 ? 'nouvelle transaction' : 'nouvelles transactions'}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
