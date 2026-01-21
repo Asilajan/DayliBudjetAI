@@ -37,15 +37,13 @@ export function TrackerWidget({ transactions }: TrackerWidgetProps) {
   const amounts = Array.from(transactionsByDate.values());
   const maxAmount = Math.max(...amounts, 1);
 
-  const getIntensityColor = (day: number) => {
-    const amount = transactionsByDate.get(day.toString());
+  const getColorByAmount = (amount: number) => {
     if (!amount) return '#1a1a1a';
 
-    const intensity = amount / maxAmount;
-    if (intensity < 0.25) return '#3f3f3f';
-    if (intensity < 0.5) return '#5f5f5f';
-    if (intensity < 0.75) return '#8f8f8f';
-    return '#ffffff';
+    if (amount < 20) return '#22c55e';
+    if (amount < 50) return '#eab308';
+    if (amount < 100) return '#f97316';
+    return '#ef4444';
   };
 
   const goToPreviousMonth = () => {
@@ -63,14 +61,16 @@ export function TrackerWidget({ transactions }: TrackerWidgetProps) {
 
   for (let day = 1; day <= daysInMonth; day++) {
     const amount = transactionsByDate.get(day.toString());
+    const color = getColorByAmount(amount || 0);
+
     days.push(
       <motion.div
         key={day}
         whileHover={{ scale: 1.1 }}
         className="aspect-square rounded-md flex flex-col items-center justify-center cursor-pointer relative group"
-        style={{ backgroundColor: getIntensityColor(day) }}
+        style={{ backgroundColor: color }}
       >
-        <span className="text-xs text-[#d1d1d1]">{day}</span>
+        <span className="text-xs text-white font-medium">{day}</span>
         {amount && (
           <div className="absolute bottom-full mb-2 hidden group-hover:block bg-[#0a0a0a] border border-[#2f2f2f] rounded px-2 py-1 whitespace-nowrap z-10">
             <span className="text-xs text-white">
@@ -126,8 +126,27 @@ export function TrackerWidget({ transactions }: TrackerWidgetProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-2 mb-4">
         {days}
+      </div>
+
+      <div className="flex items-center justify-between text-xs text-[#a1a1a1] pt-4 border-t border-[#1f1f1f]">
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#22c55e' }} />
+          <span>&lt; 20€</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#eab308' }} />
+          <span>20-50€</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#f97316' }} />
+          <span>50-100€</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded" style={{ backgroundColor: '#ef4444' }} />
+          <span>&gt; 100€</span>
+        </div>
       </div>
     </motion.div>
   );
