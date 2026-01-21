@@ -1,33 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { InsightsWidget } from './components/InsightsWidget';
 import { TrackerWidget } from './components/TrackerWidget';
 import { AccountBalanceWidget } from './components/AccountBalanceWidget';
 import { SpendingWidget } from './components/SpendingWidget';
 import { TransactionsWidget } from './components/TransactionsWidget';
 import { InboxWidget } from './components/InboxWidget';
+import { SyncStatus } from './components/SyncStatus';
 import { fetchTransactions, type Transaction } from './services/api';
 
 function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadTransactions() {
-      setLoading(true);
-      const data = await fetchTransactions();
-      setTransactions(data);
-      setLoading(false);
-    }
-
-    loadTransactions();
+  const loadTransactions = useCallback(async () => {
+    setLoading(true);
+    const data = await fetchTransactions();
+    setTransactions(data);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    loadTransactions();
+  }, [loadTransactions]);
 
   return (
     <div className="min-h-screen bg-[#000000] p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-3xl font-semibold text-white mb-2">Tableau de bord</h1>
-          <p className="text-[#a1a1a1]">Suivez vos finances en temps réel</p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-semibold text-white mb-2">Tableau de bord</h1>
+              <p className="text-[#a1a1a1]">Suivez vos finances en temps réel</p>
+            </div>
+            <SyncStatus onSync={loadTransactions} />
+          </div>
         </header>
 
         {loading ? (

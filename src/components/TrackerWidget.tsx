@@ -34,9 +34,6 @@ export function TrackerWidget({ transactions }: TrackerWidgetProps) {
     }
   });
 
-  const amounts = Array.from(transactionsByDate.values());
-  const maxAmount = Math.max(...amounts, 1);
-
   const getColorByAmount = (amount: number) => {
     if (!amount) return '#1a1a1a';
 

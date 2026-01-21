@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Inbox, Plus, Trash2, Mail, Check, X } from 'lucide-react';
+import { Inbox, Plus, Trash2, Mail } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getEmailAccounts, addEmailAccount, deleteEmailAccount, toggleEmailAccount, type EmailAccount } from '../services/localStorage';
 

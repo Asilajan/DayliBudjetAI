@@ -1,27 +1,23 @@
-// Configuration API NocoDB
-const API_URL = import.meta.env.VITE_NOCODB_API_URL;
-const API_TOKEN = import.meta.env.VITE_NOCODB_API_TOKEN;
+import { createClient } from '@supabase/supabase-js';
 
-// Interface pour les données reçues de NocoDB
-export interface NocoDBTransaction {
-  Id: number;
-  Produit: string;
-  Prix: number;
-  Date: string;
-  Categorie: string;
-  Total: number;
-  Tags: string;
-}
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export interface NocoDBResponse {
-  list: NocoDBTransaction[];
-  pageInfo?: {
-    totalRows: number;
-    page: number;
-    pageSize: number;
-    isFirstPage: boolean;
-    isLastPage: boolean;
-  };
+export const supabase = createClient(supabaseUrl, supabaseKey);
+
+export interface SupabaseTransaction {
+  id: number;
+  nature: string | null;
+  correspondant: string | null;
+  date_ticket: string | null;
+  produit: string | null;
+  prix_u: number | null;
+  quantite: number | null;
+  total: number | null;
+  tags_str: string | null;
+  source_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 // Interface pour l'application
@@ -35,38 +31,32 @@ export interface Transaction {
   tags?: string[];
 }
 
-// Récupération des transactions depuis NocoDB
 export async function fetchTransactions(): Promise<Transaction[]> {
-  console.log("🚀 Fetching data from NocoDB...");
+  console.log("🚀 Fetching data from Supabase...");
 
   try {
-    const url = `${API_URL}?limit=100&sort=-Id`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'xc-token': API_TOKEN,
-        'Content-Type': 'application/json'
-      }
-    });
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .order('date_ticket', { ascending: false })
+      .limit(100);
 
-    if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
+    if (error) {
+      console.error('Supabase error:', error);
       return [];
     }
 
-    const json: NocoDBResponse = await response.json();
-    const records = json.list || [];
-
+    const records = data || [];
     console.log(`✅ ${records.length} transactions loaded`);
 
-    return records.map((record) => ({
-      id: record.Id || Math.floor(Math.random() * 1000000),
-      name: record.Produit || "Sans nom",
-      amount: -Math.abs(Number(record.Prix) || 0),
+    return records.map((record: SupabaseTransaction) => ({
+      id: record.id,
+      name: record.produit || "Sans nom",
+      amount: -Math.abs(Number(record.prix_u) || 0),
       status: 'completed',
-      date: record.Date ? new Date(record.Date).toISOString() : new Date().toISOString(),
-      category: record.Categorie || "Non classé",
-      tags: record.Tags ? String(record.Tags).split(',').map(tag => tag.trim()) : []
+      date: record.date_ticket ? new Date(record.date_ticket).toISOString() : new Date().toISOString(),
+      category: record.nature || "Non classé",
+      tags: record.tags_str ? record.tags_str.split(',').map(tag => tag.trim()) : []
     }));
 
   } catch (error) {
