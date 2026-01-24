@@ -1,6 +1,6 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL;
+const NOCODB_API_URL = 'http://192.168.1.11:8085/api/v2/tables/mdzbaovwu0orw88/records';
+const NOCODB_TOKEN = 'c22e92a6-2a3d-4edf-a98e-4044834daea6';
+const VIEW_ID = 'vwxltw3juurlv7mx';
 
 export interface Transaction {
   id: number;
@@ -12,65 +12,77 @@ export interface Transaction {
   tags?: string[];
 }
 
-interface SupabaseTransaction {
-  id: number;
-  produit: string;
-  prix_u: number;
-  quantite: number;
-  total: number;
-  categorie?: string;
-  nature?: string;
-  correspondant?: string;
-  date_ticket: string;
-  tags_str?: string;
-  source_id?: string;
-  created_at: string;
+interface NocoDBRecord {
+  Id: number;
+  Produit: string;
+  Prix?: number;
+  Prix_U?: number;
+  prix?: number;
+  Date: string;
+  Categorie?: string;
+  Tags?: string;
 }
 
-interface SupabaseResponse {
-  transactions: SupabaseTransaction[];
-  total: number;
-  limit: number;
-  offset: number;
+interface NocoDBResponse {
+  list: NocoDBRecord[];
+  pageInfo: {
+    totalRows?: number;
+    page?: number;
+    pageSize?: number;
+  };
 }
 
 export async function fetchTransactions(): Promise<Transaction[]> {
-  console.log("Fetching data from Supabase...");
+  console.log("Fetching data from NocoDB...");
 
   try {
-    const response = await fetch(
-      `${SUPABASE_URL}/functions/v1/ingest-transactions?limit=200`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-      }
-    );
+    const url = `${NOCODB_API_URL}?offset=0&limit=100&viewId=${VIEW_ID}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'xc-token': NOCODB_TOKEN,
+      },
+    });
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Supabase error: ${error}`);
+      console.error(`NocoDB API error (${response.status}):`, error);
+      return [];
     }
 
-    const json: SupabaseResponse = await response.json();
-    const records = json.transactions || [];
+    const json: NocoDBResponse = await response.json();
+    const records = json.list || [];
 
-    console.log(`${records.length} transactions loaded from Supabase`);
+    console.log(`${records.length} transactions loaded from NocoDB`);
 
-    return records.map((record) => ({
-      id: record.id,
-      name: record.produit || "Sans nom",
-      amount: -Math.abs(record.total || record.prix_u || 0),
-      status: 'completed',
-      date: record.date_ticket ? new Date(record.date_ticket).toISOString() : new Date().toISOString(),
-      category: record.nature || record.categorie || "Non classe",
-      tags: record.tags_str ? record.tags_str.split(',').map(t => t.trim()) : []
-    }));
+    return records.map((record) => {
+      const prix = record.Prix || record.Prix_U || record.prix || 0;
+      const amountValue = typeof prix === 'number' ? prix : parseFloat(String(prix)) || 0;
+
+      let tagsArray: string[] = [];
+      if (record.Tags) {
+        if (typeof record.Tags === 'string') {
+          tagsArray = record.Tags.split(',').map(t => t.trim()).filter(t => t.length > 0);
+        } else if (Array.isArray(record.Tags)) {
+          tagsArray = record.Tags;
+        }
+      }
+
+      return {
+        id: record.Id,
+        name: record.Produit || "Sans nom",
+        amount: -Math.abs(amountValue),
+        status: 'completed',
+        date: record.Date || new Date().toISOString().split('T')[0],
+        category: record.Categorie || "Non classé",
+        tags: tagsArray
+      };
+    });
 
   } catch (error) {
-    console.error("Error fetching transactions:", error);
+    console.error("Error fetching transactions from NocoDB:", error);
     return [];
   }
 }
@@ -93,28 +105,6 @@ export function getTotalSpending(transactions: Transaction[]): number {
 }
 
 export async function syncFromN8N(): Promise<void> {
-  console.log("Triggering n8n sync...");
-
-  if (!N8N_WEBHOOK_URL) {
-    console.warn("N8N webhook URL not configured");
-    return;
-  }
-
-  try {
-    const response = await fetch(N8N_WEBHOOK_URL, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`n8n sync failed: ${response.statusText}`);
-    }
-
-    console.log("n8n sync completed successfully");
-  } catch (error) {
-    console.error("Error syncing from n8n:", error);
-    throw error;
-  }
+  console.log("Refreshing data from NocoDB...");
+  return Promise.resolve();
 }
