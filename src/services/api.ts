@@ -33,11 +33,13 @@ interface NocoDBResponse {
 }
 
 export async function fetchTransactions(): Promise<Transaction[]> {
-  console.log("Fetching data from NocoDB...");
+  const url = `${NOCODB_API_URL}?offset=0&limit=100&viewId=${VIEW_ID}`;
+
+  console.log("🔄 Fetching data from NocoDB...");
+  console.log("📍 URL:", url);
+  console.log("🔑 Token:", NOCODB_TOKEN.substring(0, 8) + "...");
 
   try {
-    const url = `${NOCODB_API_URL}?offset=0&limit=100&viewId=${VIEW_ID}`;
-
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -46,16 +48,21 @@ export async function fetchTransactions(): Promise<Transaction[]> {
       },
     });
 
+    console.log("📡 Response status:", response.status, response.statusText);
+
     if (!response.ok) {
       const error = await response.text();
-      console.error(`NocoDB API error (${response.status}):`, error);
+      console.error(`❌ NocoDB API error (${response.status}):`, error);
       return [];
     }
 
     const json: NocoDBResponse = await response.json();
     const records = json.list || [];
 
-    console.log(`${records.length} transactions loaded from NocoDB`);
+    console.log(`✅ ${records.length} transactions loaded from NocoDB`);
+    if (records.length > 0) {
+      console.log("📝 Sample record:", records[0]);
+    }
 
     return records.map((record) => {
       const prix = record.Prix || record.Prix_U || record.prix || 0;
