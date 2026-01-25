@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { RefreshCw, CheckCircle, AlertCircle, Wifi, WifiOff } from 'lucide-react';
 import { syncFromN8N } from '../services/api';
 
@@ -10,34 +10,6 @@ export function SyncStatus({ onSync }: SyncStatusProps) {
   const [status, setStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState(true);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      handleAutoSync();
-    }, 30000);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
-
-  const handleAutoSync = async () => {
-    try {
-      setStatus('syncing');
-      await onSync();
-      setStatus('success');
-      setLastSync(new Date());
-      setIsConnected(true);
-      setTimeout(() => setStatus('idle'), 2000);
-    } catch {
-      setStatus('error');
-      setIsConnected(false);
-      setTimeout(() => setStatus('idle'), 3000);
-    }
-  };
 
   const handleManualSync = async () => {
     setStatus('syncing');
