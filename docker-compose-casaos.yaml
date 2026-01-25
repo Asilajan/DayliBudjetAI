@@ -11,6 +11,11 @@ services:
     environment:
       - NODE_ENV=development
     restart: unless-stopped
+    labels:
+      - "icon=https://raw.githubusercontent.com/Asilajan/DayliBudjetAI/main/public/logo.svg"
+      - "casaos.title=Bolt Budget"
+      - "casaos.category=Finance"
+      - "casaos.port=5131"
     deploy:
       resources:
         limits:

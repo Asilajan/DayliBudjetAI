@@ -59,12 +59,13 @@ echo -e "${BLUE}🛑 Étape 2/4 : Arrêt du conteneur existant...${NC}"
 ssh "$SSH_TARGET" "cd $REMOTE_PATH && docker compose down 2>/dev/null || true"
 echo -e "${GREEN}✅ Conteneur arrêté${NC}"
 
-# Étape 4 : Démarrage du nouveau conteneur
+# Étape 4 : Démarrage du nouveau conteneur avec icône
 echo ""
 echo -e "${BLUE}🚀 Étape 3/4 : Démarrage du conteneur...${NC}"
 
 ssh "$SSH_TARGET" "cd $REMOTE_PATH && docker compose up -d"
 echo -e "${GREEN}✅ Conteneur démarré${NC}"
+echo -e "${GREEN}🎨 Icône configurée pour CasaOS${NC}"
 
 # Étape 5 : Vérification
 echo ""
