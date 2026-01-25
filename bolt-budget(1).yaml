@@ -1,0 +1,41 @@
+name: loving_joshua
+services:
+  bolt-budget:
+    cpu_shares: 90
+    command:
+      - sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    container_name: bolt-budget-dashboard
+    deploy:
+      resources:
+        limits:
+          memory: 7855M
+    environment:
+      - NODE_ENV=development
+    hostname: bolt-budget-dashboard
+    image: node:18-alpine
+    labels:
+      icon: https://icon.casaos.io/main/all/bolt-budget.png
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: /DATA/AppData/bolt-budget
+        target: /app
+    working_dir: /app
+    ports: []
+    devices: []
+    cap_add: []
+    network_mode: host
+    privileged: false
+x-casaos:
+  author: self
+  category: self
+  hostname: ""
+  icon: https://icon.casaos.io/main/all/bolt-budget.png
+  index: /
+  is_uncontrolled: false
+  port_map: "5131"
+  scheme: http
+  store_app_id: loving_joshua
+  title:
+    custom: ""
+    en_us: bolt-budget
