@@ -1,18 +1,36 @@
-# ⚡ Démarrage rapide - Budget Dashboard sur CasaOS
+# ⚡ Démarrage rapide - Bolt Budget sur CasaOS
 
-## 🚀 Installation en 3 commandes
+## 🚀 Installation en 5 minutes
+
+### 📋 Prérequis
+
+1. **Token NocoDB** : Créez un token dans NocoDB (Profil → Account Settings → Tokens)
+2. **SSH** : Accès SSH à votre serveur CasaOS
+
+### Installation
 
 ```bash
-# 1. Transférer les fichiers
-rsync -avz --exclude 'node_modules' --exclude 'dist' \
-  ./ admin@192.168.1.11:/DATA/AppData/bolt-budget/
+# 1. Cloner le projet
+cd /DATA/AppData
+git clone https://github.com/Asilajan/DayliBudjetAI.git bolt-budget-source
+cd bolt-budget-source
 
-# 2. Déployer
-./deploy-casaos.sh admin@192.168.1.11
+# 2. Configurer le token NocoDB
+nano .env
+# Mettez à jour : VITE_NOCODB_API_TOKEN=VOTRE_TOKEN
 
-# 3. Ouvrir
-open http://192.168.1.11:5173
+# 3. Tester la connexion (optionnel)
+./test-nocodb-connection.sh
+
+# 4. Installer
+chmod +x install-casaos.sh
+./install-casaos.sh
+
+# 5. Vérifier
+docker logs -f bolt-budget-dashboard
 ```
+
+Accédez à : `http://VOTRE_IP:5131`
 
 ---
 
@@ -58,9 +76,9 @@ curl http://192.168.1.11:5173
 
 ### 4. L'API NocoDB fonctionne ?
 ```bash
-curl -H "xc-token: c22e92a6-2a3d-4edf-a98e-4044834daea6" \
-  "http://192.168.1.11:8085/api/v2/tables/mdzbaovwu0orw88/records?limit=1"
-# ✅ Doit retourner du JSON avec vos données
+# Utilisez votre token et votre URL depuis le .env
+./test-nocodb-connection.sh
+# ✅ Doit afficher "Connexion réussie"
 ```
 
 ---
@@ -86,35 +104,32 @@ docker compose up -d
 
 ### ❌ Aucune transaction ne s'affiche
 
-**Cause :** Problème de token ou de mapping
+**Cause :** Problème de token ou de configuration
 
 **Solution express :**
 ```bash
-# Tester l'API directement
-curl -H "xc-token: c22e92a6-2a3d-4edf-a98e-4044834daea6" \
-  "http://192.168.1.11:8085/api/v2/tables/mdzbaovwu0orw88/records?limit=5&viewId=vwxltw3juurlv7mx"
+# 1. Tester la connexion
+./test-nocodb-connection.sh
 
-# Si ça retourne des données, le problème est dans le code
-# Vérifier les logs du navigateur (F12)
+# 2. Vérifier le .env
+cat .env | grep NOCODB
+
+# 3. Créer un nouveau token dans NocoDB si nécessaire
+# 4. Mettre à jour le .env et redémarrer
+docker restart bolt-budget-dashboard
 ```
 
 ---
 
-### ❌ Port 5173 déjà utilisé
+### ❌ Port 5131 déjà utilisé
 
 **Solution express :**
+```bash
+# Voir quel processus utilise le port
+netstat -tulpn | grep 5131
 
-Modifier `docker-compose.yaml` :
-```yaml
-# Remplacer :
-network_mode: host
-
-# Par :
-ports:
-  - "8080:5173"
+# Arrêter le processus ou changer le port dans vite.config.ts
 ```
-
-Puis redémarrer et utiliser : `http://192.168.1.11:8080`
 
 ---
 
@@ -158,20 +173,22 @@ docker compose down
 docker compose up -d --force-recreate
 
 # Tester l'API depuis le conteneur
-docker exec bolt-budget-dashboard sh -c "apk add curl && curl -H 'xc-token: c22e92a6-2a3d-4edf-a98e-4044834daea6' http://192.168.1.11:8085/api/v2/tables/mdzbaovwu0orw88/records?limit=1"
+./test-nocodb-connection.sh
 ```
 
 ---
 
 ## 🎯 Checklist de succès
 
-- [ ] Fichiers copiés dans `/DATA/AppData/bolt-budget`
-- [ ] `docker-compose.yaml` contient `network_mode: host`
+- [ ] Projet cloné dans `/DATA/AppData/bolt-budget-source`
+- [ ] Token NocoDB configuré dans `.env`
+- [ ] `./test-nocodb-connection.sh` affiche "✅ Connexion réussie"
 - [ ] `docker ps` montre le conteneur "bolt-budget-dashboard"
 - [ ] `docker logs` affiche "VITE ready in XXX ms"
-- [ ] `http://192.168.1.11:5173` affiche l'interface
+- [ ] `http://VOTRE_IP:5131` affiche l'interface
 - [ ] Console du navigateur (F12) montre "✅ X transactions loaded"
 - [ ] Les transactions s'affichent dans les widgets
+- [ ] L'icône apparaît dans CasaOS
 
 ---
 
@@ -222,4 +239,10 @@ docker logs bolt-budget-dashboard 2>&1 | grep -i "http\|error\|vite"
 ---
 
 **Temps d'installation estimé :** 5 minutes
-**Prérequis :** Docker, SSH, NocoDB accessible sur 192.168.1.11:8085
+**Prérequis :** Docker, SSH, NocoDB avec token API
+
+## 📚 Documentation
+
+- **Configuration NocoDB** : `CONFIGURATION_NOCODB.md` (détails complets)
+- **Installation CasaOS** : `INSTALLATION_CASAOS.md` (3 méthodes)
+- **Index complet** : `INDEX_DOCUMENTATION.md`

@@ -12,9 +12,16 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Configuration
-NOCODB_URL="http://192.168.1.11:8085/api/v2/tables/mdzbaovwu0orw88/records"
-NOCODB_TOKEN="c22e92a6-2a3d-4edf-a98e-4044834daea6"
+# Charger les variables d'environnement
+if [ -f .env ]; then
+  export $(cat .env | grep -v '^#' | xargs)
+  NOCODB_URL="${VITE_NOCODB_API_URL}"
+  NOCODB_TOKEN="${VITE_NOCODB_API_TOKEN}"
+else
+  echo -e "${RED}❌ Fichier .env introuvable${NC}"
+  exit 1
+fi
+
 VIEW_ID="vwxltw3juurlv7mx"
 FULL_URL="${NOCODB_URL}?limit=5&viewId=${VIEW_ID}"
 

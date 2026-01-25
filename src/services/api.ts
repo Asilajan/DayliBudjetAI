@@ -1,5 +1,5 @@
-const NOCODB_API_URL = 'http://192.168.1.11:8085/api/v2/tables/mdzbaovwu0orw88/records';
-const NOCODB_TOKEN = 'c22e92a6-2a3d-4edf-a98e-4044834daea6';
+const NOCODB_API_URL = import.meta.env.VITE_NOCODB_API_URL;
+const NOCODB_TOKEN = import.meta.env.VITE_NOCODB_API_TOKEN;
 const VIEW_ID = 'vwxltw3juurlv7mx';
 
 export interface Transaction {
