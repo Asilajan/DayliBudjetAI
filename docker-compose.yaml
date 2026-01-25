@@ -11,6 +11,14 @@ services:
       - /DATA/AppData/bolt-budget:/app
     environment:
       - NODE_ENV=development
+      - VITE_NOCODB_API_URL=${VITE_NOCODB_API_URL}
+      - VITE_NOCODB_API_TOKEN=${VITE_NOCODB_API_TOKEN}
+      - VITE_NOCODB_BUDGET_URL=${VITE_NOCODB_BUDGET_URL}
+      - VITE_NOCODB_EXPENSES_URL=${VITE_NOCODB_EXPENSES_URL}
+      - VITE_NOCODB_EMAILS_URL=${VITE_NOCODB_EMAILS_URL}
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_N8N_WEBHOOK_URL=${VITE_N8N_WEBHOOK_URL}
     restart: unless-stopped
     labels:
       - "icon=https://raw.githubusercontent.com/Asilajan/DayliBudjetAI/main/public/logo.svg"
