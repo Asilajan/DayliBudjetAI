@@ -1,0 +1,17 @@
+name: bolt-budget-app
+services:
+  bolt-budget:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bolt-budget-dashboard
+    network_mode: host
+    volumes:
+      - /DATA/AppData/bolt-budget:/app
+    environment:
+      - NODE_ENV=development
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
